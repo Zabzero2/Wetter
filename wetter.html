@@ -15,68 +15,86 @@
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
-            gap: 4vh; /* Flexibler Abstand zwischen den 3 Hauptbereichen */
+            justify-content: space-between;
             min-height: 100vh;
             user-select: none;
+            overflow: hidden; /* Verhindert das Wackeln der ganzen Seite */
         }
 
-        /* 1. Oberer Bereich: Flexibel für Tablet (nebeneinander) und Handy (untereinander) */
+        /* 1. Oberer Bereich: 3 Spalten Layout (Wetter - Details - Mond) */
         #top-section {
             display: flex;
             flex-direction: row;
             justify-content: space-between;
             align-items: center;
             width: 100%;
+            margin-bottom: 2vh;
         }
 
+        /* Spalte 1: Aktuelles Wetter (Symbol links, Text rechts daneben) */
         #current-weather {
             display: flex;
-            flex-direction: column;
-            width: 50%;
+            flex-direction: row;
+            align-items: center;
+            gap: 20px;
+            width: 33%;
         }
+        .main-emoji { font-size: clamp(6rem, 12vw, 10rem); line-height: 1; }
+        .current-text-group { display: flex; flex-direction: column; }
+        .main-temp { font-size: clamp(3.5rem, 7vw, 6rem); font-weight: bold; line-height: 1; margin-bottom: 5px; }
+        .location-name { font-size: clamp(1.8rem, 3vw, 2.5rem); font-weight: bold; }
+        .weather-desc { font-size: clamp(1.2rem, 2vw, 1.8rem); color: #aaa; }
 
+        /* Spalte 2: Details (Uhrzeit, UV, Sonne) */
         #current-details {
-            width: 50%;
+            width: 33%;
             display: flex;
             flex-direction: column;
-            align-items: flex-end;
-            text-align: right;
+            align-items: center;
+            text-align: center;
         }
-
-        /* Responsive Schriftgrößen mit clamp(min, ideal, max) */
-        .main-emoji { font-size: clamp(5rem, 10vw, 8rem); line-height: 1.2; }
-        .main-temp { font-size: clamp(4rem, 8vw, 7rem); font-weight: bold; margin: 5px 0; }
-        .location-name { font-size: clamp(2rem, 4vw, 3rem); font-weight: bold; }
-        .weather-desc { font-size: clamp(1.2rem, 2.5vw, 2rem); color: #aaa; }
-        
-        .time-display { font-size: clamp(3rem, 6vw, 5rem); font-weight: bold; margin-bottom: 15px; }
+        .time-display { font-size: clamp(4rem, 8vw, 6rem); font-weight: bold; margin-bottom: 10px; line-height: 1;}
         .detail-grid {
             display: grid;
             grid-template-columns: auto auto;
-            gap: 15px 25px;
-            font-size: clamp(1rem, 2vw, 1.5rem);
+            gap: 15px 30px;
+            font-size: clamp(1.1rem, 2vw, 1.6rem);
+            text-align: left;
         }
         .detail-item { color: #ccc; }
         .detail-value { font-weight: bold; color: #fff; }
 
-        /* 2. Mittlerer Bereich: Stunden (Scrollbar) */
+        /* Spalte 3: Mond */
+        #moon-section {
+            width: 33%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        .moon-emoji { font-size: clamp(4.5rem, 9vw, 7rem); line-height: 1; margin-bottom: 5px; }
+        .moon-status { font-size: clamp(1.5rem, 2.5vw, 2rem); font-weight: bold; color: #fff; margin-bottom: 5px; }
+        .moon-next { font-size: clamp(1.1rem, 2vw, 1.5rem); color: #aaa; }
+
+        /* 2. Mittlerer Bereich: Stunden (Scrollbar, mehr Abstand) */
         #middle-section {
             display: flex;
             overflow-x: auto;
-            gap: 30px;
-            padding-bottom: 10px;
-            scrollbar-width: none; /* Firefox */
+            gap: 40px; /* Mehr Abstand zwischen den Stunden */
+            padding: 20px 0;
+            scrollbar-width: none;
         }
-        #middle-section::-webkit-scrollbar { display: none; /* Chrome/Safari */ }
+        #middle-section::-webkit-scrollbar { display: none; }
         
         .hourly-item {
             display: flex;
             flex-direction: column;
             align-items: center;
-            font-size: clamp(1rem, 2vw, 1.5rem);
+            font-size: clamp(1.2rem, 2vw, 1.5rem); /* Etwas kleinere Schrift */
             min-width: max-content;
         }
-        .hourly-item .emoji { font-size: clamp(2rem, 4vw, 3rem); margin: 10px 0; }
+        .hourly-item .emoji { font-size: clamp(2rem, 3.5vw, 2.5rem); margin: 15px 0; }
+        .hourly-item .time { color: #ccc; }
 
         /* 3. Unterer Bereich: Tage */
         #bottom-section {
@@ -84,6 +102,7 @@
             justify-content: space-between;
             overflow-x: auto;
             gap: 15px;
+            padding-top: 10px;
             scrollbar-width: none;
         }
         #bottom-section::-webkit-scrollbar { display: none; }
@@ -93,26 +112,24 @@
             flex-direction: column;
             align-items: center;
             flex: 1;
-            min-width: 60px; /* Verhindert zu starkes Quetschen auf Handys */
-            font-size: clamp(1rem, 2vw, 1.5rem);
+            min-width: 70px;
+            font-size: clamp(1.2rem, 2vw, 1.6rem);
         }
-        .daily-item .emoji { font-size: clamp(2rem, 4vw, 3rem); margin: 10px 0; }
-        .daily-item .temp-range { color: #aaa; font-size: clamp(0.9rem, 1.5vw, 1.2rem); text-align: center;}
+        .daily-item .emoji { font-size: clamp(2.2rem, 4vw, 3rem); margin: 10px 0; }
+        .daily-item .temp-range { color: #aaa; font-size: clamp(1rem, 1.5vw, 1.3rem); text-align: center;}
         .daily-item .temp-max { color: #fff; font-weight: bold; }
 
         /* Handy-Anpassung (Hochformat) */
-        @media (max-width: 768px) {
+        @media (max-width: 900px) {
+            body { overflow-y: auto; overflow-x: hidden; justify-content: flex-start; gap: 40px; }
             #top-section {
                 flex-direction: column;
-                text-align: center;
-                gap: 30px;
+                gap: 40px;
             }
-            #current-weather, #current-details {
-                width: 100%;
-                align-items: center;
-                text-align: center;
-            }
-            .detail-grid { text-align: center; }
+            #current-weather, #current-details, #moon-section { width: 100%; justify-content: center; }
+            #current-weather { flex-direction: column; text-align: center; gap: 10px; }
+            .current-text-group { align-items: center; }
+            .detail-grid { justify-content: center; }
             #bottom-section { justify-content: flex-start; }
         }
 
@@ -121,7 +138,7 @@
             position: absolute;
             top: 20px;
             right: 20px;
-            font-size: 2rem;
+            font-size: 2.5rem;
             cursor: pointer;
             opacity: 0;
             transition: opacity 0.3s ease;
@@ -139,7 +156,6 @@
             justify-content: center;
             align-items: center;
             flex-direction: column;
-            overflow-y: auto;
             padding: 20px;
             box-sizing: border-box;
         }
@@ -217,23 +233,32 @@
     </div>
 
     <div id="top-section">
+        
         <div id="current-weather">
             <div class="main-emoji" id="curr-emoji">☀️</div>
-            <div class="main-temp" id="curr-temp">--°C</div>
-            <div class="location-name" id="curr-name">Laden...</div>
-            <div class="weather-desc" id="curr-desc">Bitte warten</div>
+            <div class="current-text-group">
+                <div class="main-temp" id="curr-temp">--°C</div>
+                <div class="location-name" id="curr-name">Laden...</div>
+                <div class="weather-desc" id="curr-desc">Bitte warten</div>
+            </div>
         </div>
+
         <div id="current-details">
             <div class="time-display" id="curr-time">--:--</div>
             <div class="detail-grid">
                 <div class="detail-item">Luftfeuchte: <span class="detail-value" id="curr-hum">--%</span></div>
                 <div class="detail-item">UV-Index: <span class="detail-value" id="curr-uv">--</span></div>
-                <div class="detail-item">Aufgang: <span class="detail-value" id="curr-sunrise">--:--</span></div>
-                <div class="detail-item">Untergang: <span class="detail-value" id="curr-sunset">--:--</span></div>
-                <div class="detail-item">Mondphase: <span class="detail-value" id="curr-moon">🌑</span></div>
-                <div class="detail-item">Vollmond: <span class="detail-value" id="next-full-moon">--.--.</span></div>
+                <div class="detail-item">🌅 Aufgang: <span class="detail-value" id="curr-sunrise">--:--</span></div>
+                <div class="detail-item">🌇 Untergang: <span class="detail-value" id="curr-sunset">--:--</span></div>
             </div>
         </div>
+
+        <div id="moon-section">
+            <div class="moon-emoji" id="curr-moon">🌑</div>
+            <div class="moon-status" id="moon-status">Berechne...</div>
+            <div class="moon-next">Nächster Vollmond:<br><span class="detail-value" id="next-full-moon" style="color:#fff; font-weight:bold;">--.--.</span></div>
+        </div>
+
     </div>
 
     <div id="middle-section"></div>
@@ -288,7 +313,7 @@
             fetchWeatherData();
         }
 
-        // --- 2. ORTSSUCHE (Open-Meteo Geocoding) ---
+        // --- 2. ORTSSUCHE ---
         async function searchCity() {
             const query = document.getElementById('search-input').value;
             if (!query) return;
@@ -326,7 +351,7 @@
             document.getElementById('input-lon').value = city.longitude.toFixed(4);
         }
 
-        // --- 3. UHR & MOND ---
+        // --- 3. UHR, MOND & WETTER-CODES ---
         function updateClock() {
             const now = new Date();
             document.getElementById('curr-time').innerText = now.toLocaleTimeString('de-DE', {hour: '2-digit', minute:'2-digit'});
@@ -335,27 +360,38 @@
         updateClock();
 
         function getEmojiAndText(wmoCode, isDay) {
+            // KOMPLETTE LISTE aller WMO Codes von Open-Meteo
             const codes = {
                 0:  { day: '☀️', night: '🌙', text: 'Klar' },
                 1:  { day: '🌤️', night: '☁️', text: 'Überwiegend klar' },
                 2:  { day: '⛅', night: '☁️', text: 'Teilweise bewölkt' },
-                3:  { day: '☁️', night: '☁️', text: 'Bewölkt' },
+                3:  { day: '☁️', night: '☁️', text: 'Bedeckt' },
                 45: { day: '🌫️', night: '🌫️', text: 'Nebel' },
                 48: { day: '🌫️', night: '🌫️', text: 'Raureifnebel' },
                 51: { day: '🌦️', night: '🌧️', text: 'Leichter Nieselregen' },
-                53: { day: '🌧️', night: '🌧️', text: 'Nieselregen' },
+                53: { day: '🌧️', night: '🌧️', text: 'Mäßiger Nieselregen' },
                 55: { day: '🌧️', night: '🌧️', text: 'Dichter Nieselregen' },
+                56: { day: '🌧️', night: '🌧️', text: 'Leichter gefrierender Nieselregen' },
+                57: { day: '🌧️', night: '🌧️', text: 'Dichter gefrierender Nieselregen' },
                 61: { day: '🌦️', night: '🌧️', text: 'Leichter Regen' },
-                63: { day: '🌧️', night: '🌧️', text: 'Regen' },
+                63: { day: '🌧️', night: '🌧️', text: 'Mäßiger Regen' },
                 65: { day: '🌧️', night: '🌧️', text: 'Starker Regen' },
+                66: { day: '🌧️', night: '🌧️', text: 'Leichter gefrierender Regen' },
+                67: { day: '🌧️', night: '🌧️', text: 'Starker gefrierender Regen' },
                 71: { day: '🌨️', night: '🌨️', text: 'Leichter Schneefall' },
-                73: { day: '❄️', night: '❄️', text: 'Schneefall' },
+                73: { day: '❄️', night: '❄️', text: 'Mäßiger Schneefall' },
                 75: { day: '❄️', night: '❄️', text: 'Starker Schneefall' },
+                77: { day: '🌨️', night: '🌨️', text: 'Schneegriesel' },
+                80: { day: '🌦️', night: '🌧️', text: 'Leichte Regenschauer' },
+                81: { day: '🌧️', night: '🌧️', text: 'Mäßige Regenschauer' },
+                82: { day: '🌧️', night: '🌧️', text: 'Heftige Regenschauer' },
+                85: { day: '🌨️', night: '🌨️', text: 'Leichte Schneeschauer' },
+                86: { day: '❄️', night: '❄️', text: 'Starke Schneeschauer' },
                 95: { day: '⛈️', night: '⛈️', text: 'Gewitter' },
-                96: { day: '⛈️', night: '⛈️', text: 'Gewitter mit Hagel' },
-                99: { day: '⛈️', night: '⛈️', text: 'Schweres Gewitter' }
+                96: { day: '⛈️', night: '⛈️', text: 'Gewitter mit leichtem Hagel' },
+                99: { day: '⛈️', night: '⛈️', text: 'Gewitter mit starkem Hagel' }
             };
-            const match = codes[wmoCode] || { day: '❓', night: '❓', text: 'Unbekannt' };
+            const match = codes[wmoCode] || { day: '☁️', night: '☁️', text: 'Unbekanntes Wetter' };
             return { emoji: isDay ? match.day : match.night, text: match.text };
         }
 
@@ -372,17 +408,28 @@
             const nextFullMoonDate = new Date(now.getTime() + (daysToFullMoon * 24 * 60 * 60 * 1000));
             document.getElementById('next-full-moon').innerText = nextFullMoonDate.toLocaleDateString('de-DE');
 
+            // Text Status bestimmen
+            let statusText = "";
+            if (cycleDays < 1 || cycleDays > 28.5) statusText = "Neumond";
+            else if (cycleDays > 13.8 && cycleDays < 15.8) statusText = "Vollmond";
+            else if (cycleDays < 14.765) statusText = "Zunehmend";
+            else statusText = "Abnehmend";
+
+            document.getElementById('moon-status').innerText = statusText;
+
+            // Bildchen
             const phase = Math.floor((cycleDays / lunarCycle) * 8 + 0.5) % 8;
             let phases = ['🌑', '🌒', '🌓', '🌔', '🌕', '🌖', '🌗', '🌘'];
             if (lat < 0) phases = ['🌑', '🌘', '🌗', '🌖', '🌕', '🌔', '🌓', '🌒'];
-            
             document.getElementById('curr-moon').innerText = phases[phase];
         }
 
         // --- 4. WETTER DATEN ABRUFEN ---
         async function fetchWeatherData() {
             document.getElementById('curr-name').innerText = settings.name;
-            const url = `https://api.open-meteo.com/v1/forecast?latitude=${settings.lat}&longitude=${settings.lon}&current=temperature_2m,relative_humidity_2m,is_day,weather_code&hourly=temperature_2m,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&timezone=auto&forecast_days=${settings.days}`;
+            
+            // Abfrage erweitert um hourly=uv_index, damit wir den Live-Wert für exakt JETZT haben
+            const url = `https://api.open-meteo.com/v1/forecast?latitude=${settings.lat}&longitude=${settings.lon}&current=temperature_2m,relative_humidity_2m,is_day,weather_code&hourly=temperature_2m,weather_code,is_day,uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset&timezone=auto&forecast_days=${settings.days}`;
             
             try {
                 const response = await fetch(url);
@@ -396,20 +443,27 @@
                 document.getElementById('curr-desc').innerText = weatherInfo.text;
                 document.getElementById('curr-hum').innerText = curr.relative_humidity_2m + '%';
                 
-                // Details
-                const today = data.daily;
-                document.getElementById('curr-uv').innerText = today.uv_index_max[0] ? today.uv_index_max[0].toFixed(1) : '--';
+                // Exakten UV Index für diese Stunde aus dem hourly-Array ziehen
+                const now = new Date();
+                let currentHourIndex = data.hourly.time.findIndex(t => {
+                    const d = new Date(t);
+                    return d.getDate() === now.getDate() && d.getHours() === now.getHours();
+                });
+                if (currentHourIndex === -1) currentHourIndex = 0; // Fallback
+                const currentUv = data.hourly.uv_index[currentHourIndex];
+                document.getElementById('curr-uv').innerText = currentUv !== undefined ? currentUv.toFixed(1) : '0';
                 
+                // Sonnenzeiten
+                const today = data.daily;
                 const formatTime = (isoString) => new Date(isoString).toLocaleTimeString('de-DE', {hour: '2-digit', minute:'2-digit'});
                 document.getElementById('curr-sunrise').innerText = formatTime(today.sunrise[0]);
                 document.getElementById('curr-sunset').innerText = formatTime(today.sunset[0]);
 
                 calculateMoonPhase(settings.lat);
 
-                // Stunden (nächste 12 Stunden)
+                // Stunden (nächste 12 Stunden) - mit dem ermittelten Index starten
                 const hourlyContainer = document.getElementById('middle-section');
                 hourlyContainer.innerHTML = '';
-                const currentHourIndex = data.hourly.time.findIndex(t => new Date(t) > new Date());
                 
                 for (let i = currentHourIndex; i < currentHourIndex + 12; i++) {
                     const time = new Date(data.hourly.time[i]);
@@ -420,7 +474,7 @@
 
                     hourlyContainer.innerHTML += `
                         <div class="hourly-item">
-                            <div>${hourStr}</div>
+                            <div class="time">${hourStr}</div>
                             <div class="emoji">${e}</div>
                             <div>${temp}°C</div>
                         </div>
@@ -456,7 +510,7 @@
 
         // Start
         fetchWeatherData();
-        setInterval(fetchWeatherData, 5 * 60 * 1000);
+        setInterval(fetchWeatherData, 5 * 60 * 1000); // Alle 5 Min aktualisieren
     </script>
 </body>
 </html>
