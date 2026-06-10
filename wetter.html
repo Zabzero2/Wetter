@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Smart Weather Dashboard</title>
+    <title>Smart Weather Dashboard Pro</title>
     <style>
         /* --- GRUNDDESIGN --- */
         body {
@@ -23,7 +23,7 @@
 
         /* Versteckter Einstellungsbutton */
         #settings-btn {
-            position: fixed; top: 2.5vh; right: 3vw; font-size: 2rem; cursor: pointer;
+            position: fixed; top: 2.5vh; left: 50%; transform: translateX(-50%); font-size: 2rem; cursor: pointer;
             opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 100;
             background: rgba(255,255,255,0.1); padding: 10px; border-radius: 50%;
         }
@@ -37,18 +37,26 @@
             padding: 2.5vh 2vw;
             box-sizing: border-box;
             display: flex;
+            position: relative;
         }
 
-        /* --- KOPFZEILE (Uhr & Datum vereint) --- */
+        /* --- KOPFZEILE (Uhr Links, Mond Rechts) --- */
         #header-section {
             display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            padding-left: 1vw;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 0 1vw;
             height: 12vh;
         }
+        #header-left { display: flex; flex-direction: column; justify-content: flex-end; }
         #header-time { font-size: clamp(3.5rem, 7vw, 6rem); font-weight: 700; line-height: 1; letter-spacing: -2px; }
-        #header-date { font-size: clamp(1.2rem, 2.5vw, 1.8rem); color: #a0a0a5; font-weight: 500; margin-top: 2px;}
+        #header-date { font-size: clamp(1.2rem, 2.5vw, 1.8rem); color: #a0a0a5; font-weight: 500; margin-top: 4px;}
+        
+        #header-right { display: flex; align-items: center; gap: 15px; text-align: right;}
+        .astro-texts { display: flex; flex-direction: column; }
+        #astro-status { font-size: clamp(1.2rem, 2vw, 1.6rem); font-weight: bold; color: #fff;}
+        #astro-countdown { font-size: clamp(1rem, 1.5vw, 1.2rem); color: #0a84ff; font-weight: 600; margin-top: 3px; letter-spacing: 0.5px;}
+        #astro-emoji { font-size: clamp(3.5rem, 5vw, 4.5rem); line-height: 1; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2)); }
 
         /* --- MITTLERER BEREICH (Aktuell + Sensor Gitter) --- */
         #top-row { display: flex; gap: 2vw; height: 35vh; }
@@ -58,37 +66,39 @@
             flex: 1;
             align-items: center;
             gap: 2vw;
+            overflow: hidden; /* Für den Glow Effekt */
         }
-        .main-emoji { font-size: clamp(5rem, 9vw, 8rem); line-height: 1; text-shadow: 0 0 25px rgba(255,255,255,0.15); }
-        .current-info { display: flex; flex-direction: column; justify-content: center; width: 100%;}
+        /* Der dynamische Glow im Hintergrund */
+        #weather-glow {
+            position: absolute; width: 250px; height: 250px; border-radius: 50%;
+            filter: blur(70px); z-index: 0; opacity: 0.4; top: -10%; left: -10%;
+            transition: background 0.8s ease; pointer-events: none;
+        }
+        .main-emoji { font-size: clamp(5rem, 9vw, 8rem); line-height: 1; z-index: 1; position: relative; text-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        .current-info { display: flex; flex-direction: column; justify-content: center; width: 100%; z-index: 1; position: relative;}
         .main-temp { font-size: clamp(3.5rem, 6vw, 5rem); font-weight: bold; line-height: 1; display: flex; align-items: baseline; gap: 10px;}
         .temp-feels { font-size: clamp(1.2rem, 2vw, 1.8rem); color: #a0a0a5; font-weight: normal; }
         .temp-highlow { font-size: clamp(1.1rem, 1.8vw, 1.5rem); color: #fff; font-weight: 600; margin: 8px 0; }
-        .location-name { font-size: clamp(1.5rem, 2.5vw, 2.2rem); font-weight: 600; color: #fff; }
+        .location-name { font-size: clamp(1.4rem, 2.3vw, 2rem); font-weight: 600; color: #fff; text-transform: uppercase; letter-spacing: 1px;}
         .weather-desc { font-size: clamp(1.1rem, 1.8vw, 1.5rem); color: #0a84ff; font-weight: 500; margin-top: 3px;}
 
         /* Rechts: Sensor Gitter (3 Spalten x 2 Zeilen) */
         #card-sensors {
-            flex: 1.5;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: 1fr 1fr;
-            gap: 15px;
-            align-items: center;
+            flex: 1.5; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: 1fr 1fr;
+            gap: 15px; align-items: center;
         }
         .sensor-item { display: flex; flex-direction: column; justify-content: center; align-items: flex-start; }
         .sensor-label { display: flex; align-items: center; gap: 6px; font-size: clamp(0.9rem, 1.5vw, 1.2rem); color: #a0a0a5; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;}
-        .sensor-value { font-size: clamp(1.3rem, 2.2vw, 1.8rem); font-weight: 600; color: #fff; display: flex; align-items: center; gap: 8px; }
+        .sensor-value { font-size: clamp(1.3rem, 2vw, 1.8rem); font-weight: 600; color: #fff; display: flex; align-items: center; gap: 8px; line-height: 1.2; }
         .wind-arrow { display: inline-block; transition: transform 0.3s ease; }
+        .sun-grid { display: flex; flex-direction: column; gap: 4px; font-size: clamp(1.1rem, 1.8vw, 1.4rem); font-weight: 600;}
 
-        /* --- UNTERER BEREICH (Stunden & Tage nebeneinander) --- */
+        /* --- UNTERER BEREICH (Stunden & Tage) --- */
         #bottom-row { display: flex; gap: 2vw; height: 35vh; }
 
         .scroll-card {
-            flex: 1;
-            flex-direction: column;
-            overflow: hidden;
-            padding: 2vh 0; /* Padding nur oben/unten */
+            flex: 1; flex-direction: column; overflow: hidden; padding: 2vh 0;
+            transition: border 0.3s ease;
         }
         .scroll-title { padding-left: 2vw; font-size: clamp(1rem, 1.8vw, 1.4rem); color: #a0a0a5; font-weight: 600; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px;}
         .scroll-container {
@@ -97,18 +107,26 @@
         }
         .scroll-container::-webkit-scrollbar { display: none; }
 
-        /* Items in den Scroll-Listen */
-        .forecast-item { display: flex; flex-direction: column; align-items: center; min-width: max-content; }
+        /* Interaktive Items */
+        .forecast-item { 
+            display: flex; flex-direction: column; align-items: center; min-width: max-content; 
+            cursor: pointer; padding: 10px; border-radius: 15px; transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        .forecast-item:active { transform: scale(0.92); }
+        .forecast-item.selected { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
+        
         .fc-time-day { font-size: clamp(1.1rem, 1.8vw, 1.4rem); font-weight: 600; color: #fff; }
         .fc-emoji { font-size: clamp(2rem, 3.5vw, 2.8rem); margin: 1.5vh 0; }
         .fc-val1 { font-size: clamp(1.3rem, 2vw, 1.6rem); font-weight: bold; color: #fff; }
         .fc-val2 { font-size: clamp(1.1rem, 1.8vw, 1.4rem); color: #888; font-weight: 500; margin-top: 5px;}
-        .fc-precip { font-size: clamp(0.9rem, 1.2vw, 1.1rem); color: #0a84ff; margin-top: 5px; font-weight: 600;}
 
         /* --- HANDY ANPASSUNG --- */
         @media (max-width: 900px) {
             body { overflow-y: auto; overflow-x: hidden; height: auto; }
-            #header-section { height: auto; text-align: center; align-items: center; padding: 0; margin-bottom: 10px;}
+            #header-section { height: auto; flex-direction: column; align-items: center; padding: 0; margin-bottom: 10px; gap: 15px;}
+            #header-left { text-align: center; }
+            #header-right { justify-content: center; text-align: right; }
             #top-row, #bottom-row { flex-direction: column; height: auto; }
             #card-current { flex-direction: column; text-align: center; }
             .main-temp { justify-content: center; }
@@ -127,10 +145,7 @@
             background: #1c1c1e; border: 1px solid #333; padding: 30px; border-radius: 20px;
             display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 500px;
         }
-        .settings-box input, .settings-box select {
-            font-size: 1.2rem; padding: 12px; border-radius: 10px; border: 1px solid #444;
-            background: #2c2c2e; color: #fff; width: 100%; box-sizing: border-box;
-        }
+        .settings-box input, .settings-box select { font-size: 1.2rem; padding: 12px; border-radius: 10px; border: 1px solid #444; background: #2c2c2e; color: #fff; width: 100%; box-sizing: border-box; }
         .search-row { display: flex; gap: 10px; }
         .settings-box button { font-size: 1.2rem; font-weight: bold; padding: 14px; background: #0a84ff; color: white; border: none; border-radius: 10px; cursor: pointer; }
         .settings-box button.save-btn { background: #30d158; }
@@ -151,7 +166,7 @@
             <select id="search-results" style="display: none;" onchange="applySearchResult()"></select>
             <hr style="border-color: #333; width: 100%; margin: 5px 0;">
             <label style="color:#aaa;">Anzeigename:</label>
-            <input type="text" id="input-name" value="Zuhause">
+            <input type="text" id="input-name" value="Meitingen">
             <div class="search-row">
                 <div style="width: 50%;"><label style="color:#aaa;">Breitengrad:</label><input type="number" id="input-lat" step="0.0001"></div>
                 <div style="width: 50%;"><label style="color:#aaa;">Längengrad:</label><input type="number" id="input-lon" step="0.0001"></div>
@@ -164,23 +179,34 @@
 
     <!-- KOPFZEILE -->
     <div id="header-section">
-        <div id="header-time">--:--</div>
-        <div id="header-date">Lade...</div>
+        <div id="header-left">
+            <div id="header-time">--:--</div>
+            <div id="header-date">Lade...</div>
+        </div>
+        <!-- NEU: Das Astro-Widget oben rechts -->
+        <div id="header-right">
+            <div class="astro-texts">
+                <div id="astro-status">Berechne...</div>
+                <div id="astro-countdown">-- Tage</div>
+            </div>
+            <div id="astro-emoji">🌑</div>
+        </div>
     </div>
 
     <!-- MITTE: Aktuell & Sensoren -->
     <div id="top-row">
-        <!-- Links: Aktuell -->
+        <!-- Links: Anzeige -->
         <div class="card" id="card-current">
+            <div id="weather-glow"></div> <!-- Der Farbschimmer -->
             <div class="main-emoji" id="curr-emoji">☀️</div>
             <div class="current-info">
                 <div class="location-name" id="curr-name">Laden...</div>
                 <div class="weather-desc" id="curr-desc">Bitte warten</div>
                 <div class="main-temp">
                     <span id="curr-temp">--°</span>
-                    <span class="temp-feels">Gefühlt: <span id="curr-feels">--°</span></span>
+                    <span class="temp-feels" id="feels-container">Gefühlt: <span id="curr-feels">--°</span></span>
                 </div>
-                <div class="temp-highlow">Heute: ↓ <span id="curr-min">--°</span> | ↑ <span id="curr-max">--°</span></div>
+                <div class="temp-highlow" id="highlow-container">↓ <span id="curr-min">--°</span> | ↑ <span id="curr-max">--°</span></div>
             </div>
         </div>
 
@@ -209,15 +235,15 @@
             <!-- Sonne -->
             <div class="sensor-item">
                 <div class="sensor-label">🌅 Sonne</div>
-                <div class="sensor-value" style="font-size: clamp(1rem, 1.8vw, 1.4rem);">
-                    Auf: <span id="curr-sunrise">--:--</span><br>
-                    Unt: <span id="curr-sunset">--:--</span>
+                <div class="sensor-value sun-grid">
+                    <div>Auf: <span id="curr-sunrise">--:--</span></div>
+                    <div>Unt: <span id="curr-sunset">--:--</span></div>
                 </div>
             </div>
-            <!-- Mond -->
+            <!-- NEU: Sichtweite -->
             <div class="sensor-item">
-                <div class="sensor-label">🌑 Mondphase</div>
-                <div class="sensor-value"><span id="curr-moon" style="font-size: 1.5em;">🌑</span> <span id="moon-status" style="font-size: clamp(1rem, 1.5vw, 1.2rem);">--</span></div>
+                <div class="sensor-label">👁️ Sichtweite</div>
+                <div class="sensor-value" id="curr-vis">-- km</div>
             </div>
         </div>
     </div>
@@ -226,7 +252,7 @@
     <div id="bottom-row">
         <!-- Stunden Scrollbar -->
         <div class="card scroll-card">
-            <div class="scroll-title">Nächste 24 Stunden</div>
+            <div class="scroll-title" id="title-hourly">Stunden-Details</div>
             <div class="scroll-container" id="container-hourly"></div>
         </div>
 
@@ -238,89 +264,32 @@
     </div>
 
     <script>
-        // --- WAKE LOCK (Display anlassen) ---
+        // --- WAKE LOCK ---
         let wakeLock = null;
         async function requestWakeLock() {
             if ('wakeLock' in navigator) {
-                try {
-                    wakeLock = await navigator.wakeLock.request('screen');
-                    console.log('Wake Lock aktiv - Display bleibt an!');
-                    wakeLock.addEventListener('release', () => console.log('Wake Lock beendet.'));
-                } catch (err) { console.error('Wake Lock Fehler:', err); }
+                try { wakeLock = await navigator.wakeLock.request('screen'); } 
+                catch (err) { console.error(err); }
             }
         }
-        document.addEventListener('visibilitychange', () => {
-            if (wakeLock !== null && document.visibilityState === 'visible') requestWakeLock();
-        });
-        requestWakeLock(); // Direkt beim Start aufrufen
+        document.addEventListener('visibilitychange', () => { if (wakeLock !== null && document.visibilityState === 'visible') requestWakeLock(); });
+        requestWakeLock();
 
-        // --- EINSTELLUNGEN ---
+        // --- GLOBALE VARIABLEN ---
+        let weatherData = null;
+        let currentHourIdxGlob = 0;
+        let resetTimer = null;
+        const weekdays = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+        const weekdaysShort = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+
         let settings = {
             name: localStorage.getItem('wName') || 'Meitingen',
             lat: parseFloat(localStorage.getItem('wLat')) || 48.5447,
             lon: parseFloat(localStorage.getItem('wLon')) || 10.8494,
             days: parseInt(localStorage.getItem('wDays')) || 14
         };
-        let foundCities = [];
 
-        // Menü Logik
-        let btnTimeout;
-        document.body.addEventListener('click', (e) => {
-            if (e.target.closest('#settings-modal')) return;
-            const btn = document.getElementById('settings-btn');
-            if (e.target.id === 'settings-btn') {
-                document.getElementById('input-name').value = settings.name;
-                document.getElementById('input-lat').value = settings.lat;
-                document.getElementById('input-lon').value = settings.lon;
-                document.getElementById('input-days').value = settings.days;
-                document.getElementById('settings-modal').style.display = 'flex';
-                return;
-            }
-            btn.classList.add('visible');
-            clearTimeout(btnTimeout);
-            btnTimeout = setTimeout(() => btn.classList.remove('visible'), 4000);
-        });
-
-        function saveSettings() {
-            settings.name = document.getElementById('input-name').value;
-            settings.lat = parseFloat(document.getElementById('input-lat').value);
-            settings.lon = parseFloat(document.getElementById('input-lon').value);
-            settings.days = parseInt(document.getElementById('input-days').value);
-            localStorage.setItem('wName', settings.name);
-            localStorage.setItem('wLat', settings.lat);
-            localStorage.setItem('wLon', settings.lon);
-            localStorage.setItem('wDays', settings.days);
-            document.getElementById('settings-modal').style.display = 'none';
-            fetchWeatherData();
-        }
-
-        async function searchCity() {
-            const query = document.getElementById('search-input').value;
-            if (!query) return;
-            try {
-                const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=10&language=de&format=json`);
-                const data = await res.json();
-                const select = document.getElementById('search-results');
-                select.innerHTML = '<option value="">-- Bitte wählen --</option>';
-                if (data.results) {
-                    foundCities = data.results;
-                    data.results.forEach((city, i) => {
-                        select.innerHTML += `<option value="${i}">${city.name} (${city.admin1 || ''}, ${city.country || ''})</option>`;
-                    });
-                    select.style.display = 'block';
-                }
-            } catch (err) {}
-        }
-
-        function applySearchResult() {
-            const idx = document.getElementById('search-results').value;
-            if (idx === "") return;
-            document.getElementById('input-name').value = foundCities[idx].name;
-            document.getElementById('input-lat').value = foundCities[idx].latitude.toFixed(4);
-            document.getElementById('input-lon').value = foundCities[idx].longitude.toFixed(4);
-        }
-
-        // --- HILFSFUNKTIONEN (Uhr, Wind, Wettercodes, Mond) ---
+        // --- HILFSFUNKTIONEN ---
         function updateClock() {
             const now = new Date();
             document.getElementById('header-time').innerText = now.toLocaleTimeString('de-DE', {hour: '2-digit', minute:'2-digit'});
@@ -329,8 +298,17 @@
         setInterval(updateClock, 1000); updateClock();
 
         function getWindDirectionStr(degree) {
-            const directions = ['N', 'NO', 'O', 'SO', 'S', 'SW', 'W', 'NW'];
-            return directions[Math.round(((degree %= 360) < 0 ? degree + 360 : degree) / 45) % 8];
+            const dir = ['N', 'NO', 'O', 'SO', 'S', 'SW', 'W', 'NW'];
+            return dir[Math.round(((degree %= 360) < 0 ? degree + 360 : degree) / 45) % 8];
+        }
+
+        // Der Glow-Effekt
+        function setGlow(wmoCode, isDay) {
+            const glow = document.getElementById('weather-glow');
+            if (!isDay) { glow.style.background = 'rgba(50, 50, 150, 0.4)'; return; }
+            if (wmoCode <= 2) { glow.style.background = 'rgba(255, 165, 0, 0.5)'; return; } // Sonne
+            if (wmoCode <= 48) { glow.style.background = 'rgba(150, 150, 150, 0.4)'; return; } // Wolken
+            glow.style.background = 'rgba(0, 100, 255, 0.4)'; // Regen
         }
 
         function getEmojiAndText(wmoCode, isDay) {
@@ -361,99 +339,272 @@
             else if (cd > 13.8 && cd < 15.8) st = "Vollmond";
             else if (cd < 14.765) st = "Zunehmend";
             else st = "Abnehmend";
-            document.getElementById('moon-status').innerText = st;
+            
+            let daysToFullMoon = 14.765 - cd;
+            if (daysToFullMoon < 0) daysToFullMoon += cycle;
+            const dtfm = Math.round(daysToFullMoon);
+            
+            let cdText = dtfm === 0 ? "Heute Vollmond!" : (dtfm === 1 ? "Morgen Vollmond" : `Vollmond in ${dtfm} Tagen`);
+            
+            document.getElementById('astro-status').innerText = st;
+            document.getElementById('astro-countdown').innerText = cdText;
 
             const p = Math.floor((cd / cycle) * 8 + 0.5) % 8;
             let ph = ['🌑', '🌒', '🌓', '🌔', '🌕', '🌖', '🌗', '🌘'];
             if (lat < 0) ph = ['🌑', '🌘', '🌗', '🌖', '🌕', '🌔', '🌓', '🌒'];
-            document.getElementById('curr-moon').innerText = ph[p];
+            document.getElementById('astro-emoji').innerText = ph[p];
+        }
+
+        // --- INTERAKTIVE FUNKTIONEN (Der Klick-Zauber) ---
+
+        // Auto-Reset nach 30 Sekunden Nichts-Tun
+        function triggerAutoReset() {
+            clearTimeout(resetTimer);
+            resetTimer = setTimeout(() => {
+                renderCurrentLive();
+                renderHourly(currentHourIdxGlob, 0); // Rendert Stunden ab jetzt
+                clearSelections();
+            }, 30000);
+        }
+
+        function clearSelections() {
+            document.querySelectorAll('.forecast-item').forEach(el => el.classList.remove('selected'));
+        }
+
+        // 1. Klick auf eine Stunde
+        window.selectHourly = function(idx, element) {
+            triggerAutoReset();
+            clearSelections();
+            element.classList.add('selected');
+
+            const h = weatherData.hourly;
+            const d = new Date(h.time[idx]);
+            const isToday = d.getDate() === new Date().getDate();
+            
+            const info = getEmojiAndText(h.weather_code[idx], h.is_day[idx] === 1);
+            setGlow(h.weather_code[idx], h.is_day[idx] === 1);
+            
+            document.getElementById('curr-emoji').innerText = info.emoji;
+            document.getElementById('curr-name').innerText = isToday ? `Heute, ${d.getHours()}:00 Uhr` : `${weekdaysShort[d.getDay()]}, ${d.getHours()}:00 Uhr`;
+            document.getElementById('curr-desc').innerText = info.text;
+            document.getElementById('curr-temp').innerText = Math.round(h.temperature_2m[idx]) + '°';
+            
+            document.getElementById('highlow-container').style.display = 'none'; // Min/Max bei Stunde verbergen
+            document.getElementById('curr-feels').innerText = Math.round(h.apparent_temperature[idx]) + '°';
+            
+            const wDir = h.wind_direction_10m[idx];
+            document.getElementById('wind-arrow').style.transform = `rotate(${wDir}deg)`;
+            document.getElementById('wind-speed').innerText = `${Math.round(h.wind_speed_10m[idx])} km/h ${getWindDirectionStr(wDir)}`;
+            
+            document.getElementById('precip-prob').innerText = h.precipitation_probability[idx] + '%';
+            document.getElementById('precip-sum').innerText = `(${h.precipitation[idx]} mm)`;
+            
+            document.getElementById('curr-hum').innerText = h.relative_humidity_2m[idx] + '%';
+            document.getElementById('curr-uv').innerText = h.uv_index[idx] !== undefined ? h.uv_index[idx].toFixed(1) : '--';
+            document.getElementById('curr-vis').innerText = Math.round(h.visibility[idx]/1000) + ' km';
+        };
+
+        // 2. Klick auf einen Tag
+        window.selectDaily = function(dayIdx, element) {
+            triggerAutoReset();
+            clearSelections();
+            element.classList.add('selected');
+
+            const day = weatherData.daily;
+            const d = new Date(day.time[dayIdx]);
+            
+            // Tagesansicht in Top-Kachel laden
+            const info = getEmojiAndText(day.weather_code[dayIdx], true);
+            setGlow(day.weather_code[dayIdx], true);
+            
+            document.getElementById('curr-emoji').innerText = info.emoji;
+            document.getElementById('curr-name').innerText = dayIdx === 0 ? "Heute (Tages-Mix)" : weekdays[d.getDay()];
+            document.getElementById('curr-desc').innerText = info.text;
+            
+            // Temperatur = Max Temp
+            document.getElementById('curr-temp').innerText = Math.round(day.temperature_2m_max[dayIdx]) + '°';
+            document.getElementById('highlow-container').style.display = 'block';
+            document.getElementById('curr-min').innerText = Math.round(day.temperature_2m_min[dayIdx]) + '°';
+            document.getElementById('curr-max').innerText = Math.round(day.temperature_2m_max[dayIdx]) + '°';
+            document.getElementById('feels-container').style.display = 'none'; // Bei Tagesansicht kein "Gefühlt"
+            
+            document.getElementById('wind-arrow').style.transform = `rotate(0deg)`; // Kein Pfeil bei Tagesmax
+            document.getElementById('wind-speed').innerText = `Max ${Math.round(day.wind_speed_10m_max[dayIdx])} km/h`;
+            
+            document.getElementById('precip-prob').innerText = day.precipitation_probability_max[dayIdx] + '%';
+            document.getElementById('precip-sum').innerText = `(${day.precipitation_sum[dayIdx]} mm)`;
+            
+            const fTime = (i) => new Date(i).toLocaleTimeString('de-DE', {hour: '2-digit', minute:'2-digit'});
+            document.getElementById('curr-sunrise').innerText = fTime(day.sunrise[dayIdx]);
+            document.getElementById('curr-sunset').innerText = fTime(day.sunset[dayIdx]);
+            document.getElementById('curr-uv').innerText = day.uv_index_max[dayIdx].toFixed(1);
+
+            // Proxy-Werte für Feuchte/Sichtweite (wir nehmen 14:00 Uhr dieses Tages)
+            const targetDateStr = day.time[dayIdx];
+            const hour14Idx = weatherData.hourly.time.findIndex(t => t === `${targetDateStr}T14:00`);
+            if(hour14Idx !== -1) {
+                document.getElementById('curr-hum').innerText = weatherData.hourly.relative_humidity_2m[hour14Idx] + '%';
+                document.getElementById('curr-vis').innerText = Math.round(weatherData.hourly.visibility[hour14Idx]/1000) + ' km';
+            }
+
+            // Stunden für DIESEN TAG laden
+            const startHourIdx = weatherData.hourly.time.findIndex(t => t.startsWith(targetDateStr));
+            renderHourly(startHourIdx, dayIdx);
+        };
+
+        // 3. Normales Live-Wetter Rendern (Der Standard-Status)
+        function renderCurrentLive() {
+            const cur = weatherData.current;
+            const day = weatherData.daily;
+            
+            const info = getEmojiAndText(cur.weather_code, cur.is_day === 1);
+            setGlow(cur.weather_code, cur.is_day === 1);
+            
+            document.getElementById('curr-emoji').innerText = info.emoji;
+            document.getElementById('curr-name').innerText = settings.name;
+            document.getElementById('curr-desc').innerText = info.text;
+            document.getElementById('curr-temp').innerText = Math.round(cur.temperature_2m) + '°';
+            
+            document.getElementById('highlow-container').style.display = 'block';
+            document.getElementById('feels-container').style.display = 'inline';
+            document.getElementById('curr-feels').innerText = Math.round(cur.apparent_temperature) + '°';
+            document.getElementById('curr-min').innerText = Math.round(day.temperature_2m_min[0]) + '°';
+            document.getElementById('curr-max').innerText = Math.round(day.temperature_2m_max[0]) + '°';
+
+            const wDir = cur.wind_direction_10m;
+            document.getElementById('wind-arrow').style.transform = `rotate(${wDir}deg)`;
+            document.getElementById('wind-speed').innerText = `${Math.round(cur.wind_speed_10m)} km/h ${getWindDirectionStr(wDir)}`;
+            
+            document.getElementById('precip-prob').innerText = day.precipitation_probability_max[0] + '%';
+            document.getElementById('precip-sum').innerText = `(${day.precipitation_sum[0]} mm)`;
+            
+            document.getElementById('curr-hum').innerText = cur.relative_humidity_2m + '%';
+            document.getElementById('curr-vis').innerText = Math.round(cur.visibility/1000) + ' km';
+            
+            const fTime = (i) => new Date(i).toLocaleTimeString('de-DE', {hour: '2-digit', minute:'2-digit'});
+            document.getElementById('curr-sunrise').innerText = fTime(day.sunrise[0]);
+            document.getElementById('curr-sunset').innerText = fTime(day.sunset[0]);
+
+            // UV live
+            document.getElementById('curr-uv').innerText = weatherData.hourly.uv_index[currentHourIdxGlob] !== undefined ? weatherData.hourly.uv_index[currentHourIdxGlob].toFixed(1) : '0';
+        }
+
+        // Rendert die Stundenvorschau
+        function renderHourly(startIdx, contextDayIdx = 0) {
+            const hCont = document.getElementById('container-hourly');
+            hCont.innerHTML = '';
+            
+            const dName = contextDayIdx === 0 ? "Nächste 24 Stunden" : `Stunden am ${weekdays[new Date(weatherData.daily.time[contextDayIdx]).getDay()]}`;
+            document.getElementById('title-hourly').innerText = dName;
+
+            const fTime = (i) => new Date(i).toLocaleTimeString('de-DE', {hour: '2-digit', minute:'2-digit'});
+            
+            for (let i = startIdx; i < startIdx + 24; i++) {
+                if(!weatherData.hourly.time[i]) break;
+                const e = getEmojiAndText(weatherData.hourly.weather_code[i], weatherData.hourly.is_day[i] === 1).emoji;
+                
+                hCont.innerHTML += `
+                    <div class="forecast-item" onclick="selectHourly(${i}, this)">
+                        <div class="fc-time-day">${(i === currentHourIdxGlob) ? 'Jetzt' : fTime(weatherData.hourly.time[i])}</div>
+                        <div class="fc-emoji">${e}</div>
+                        <div class="fc-val1">${Math.round(weatherData.hourly.temperature_2m[i])}°</div>
+                    </div>`;
+            }
         }
 
         // --- HAUPTABFRAGE API ---
         async function fetchWeatherData() {
-            document.getElementById('curr-name').innerText = settings.name;
-            const url = `https://api.open-meteo.com/v1/forecast?latitude=${settings.lat}&longitude=${settings.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m,wind_direction_10m&hourly=temperature_2m,precipitation_probability,weather_code,is_day,uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,precipitation_sum&timezone=auto&forecast_days=${settings.days}`;
+            const url = `https://api.open-meteo.com/v1/forecast?latitude=${settings.lat}&longitude=${settings.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m,wind_direction_10m,visibility&hourly=temperature_2m,precipitation_probability,precipitation,weather_code,is_day,uv_index,visibility,wind_speed_10m,wind_direction_10m,relative_humidity_2m,apparent_temperature&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,precipitation_sum,wind_speed_10m_max,uv_index_max&timezone=auto&forecast_days=${settings.days}`;
             
             try {
                 const res = await fetch(url);
-                const data = await res.json();
+                weatherData = await res.json();
 
-                // Aktuelles Wetter & Links
-                const cur = data.current;
-                const info = getEmojiAndText(cur.weather_code, cur.is_day === 1);
-                document.getElementById('curr-emoji').innerText = info.emoji;
-                document.getElementById('curr-temp').innerText = Math.round(cur.temperature_2m) + '°';
-                document.getElementById('curr-feels').innerText = Math.round(cur.apparent_temperature) + '°';
-                document.getElementById('curr-desc').innerText = info.text;
-                
-                // Tages-Max/Min für Heute
-                const day = data.daily;
-                document.getElementById('curr-max').innerText = Math.round(day.temperature_2m_max[0]) + '°';
-                document.getElementById('curr-min').innerText = Math.round(day.temperature_2m_min[0]) + '°';
-
-                // Sensoren Rechts
-                document.getElementById('curr-hum').innerText = cur.relative_humidity_2m + '%';
-                
-                // Wind
-                const wDir = cur.wind_direction_10m;
-                const arrow = document.getElementById('wind-arrow');
-                arrow.style.transform = `rotate(${wDir}deg)`; // Pfeil drehen!
-                document.getElementById('wind-speed').innerText = `${Math.round(cur.wind_speed_10m)} km/h ${getWindDirectionStr(wDir)}`;
-                
-                // Regen (Heute Max)
-                document.getElementById('precip-prob').innerText = day.precipitation_probability_max[0] + '%';
-                document.getElementById('precip-sum').innerText = `(${day.precipitation_sum[0]} mm)`;
-
-                // Sonne & Mond
-                const fTime = (i) => new Date(i).toLocaleTimeString('de-DE', {hour: '2-digit', minute:'2-digit'});
-                document.getElementById('curr-sunrise').innerText = fTime(day.sunrise[0]);
-                document.getElementById('curr-sunset').innerText = fTime(day.sunset[0]);
-                calcMoon(settings.lat);
-
-                // UV-Index Live aus Hourly
                 const now = new Date();
-                let idx = data.hourly.time.findIndex(t => new Date(t).getHours() === now.getHours() && new Date(t).getDate() === now.getDate());
-                if (idx === -1) idx = 0;
-                document.getElementById('curr-uv').innerText = data.hourly.uv_index[idx] !== undefined ? data.hourly.uv_index[idx].toFixed(1) : '0';
+                currentHourIdxGlob = weatherData.hourly.time.findIndex(t => new Date(t).getHours() === now.getHours() && new Date(t).getDate() === now.getDate());
+                if (currentHourIdxGlob === -1) currentHourIdxGlob = 0;
 
-                // --- STUNDEN (Links Unten) ---
-                const hCont = document.getElementById('container-hourly');
-                hCont.innerHTML = '';
-                for (let i = idx; i < idx + 24; i++) {
-                    if(!data.hourly.time[i]) break;
-                    const d = new Date(data.hourly.time[i]);
-                    const e = getEmojiAndText(data.hourly.weather_code[i], data.hourly.is_day[i] === 1).emoji;
-                    const pProb = data.hourly.precipitation_probability[i];
-                    hCont.innerHTML += `
-                        <div class="forecast-item">
-                            <div class="fc-time-day">${i === idx ? 'Jetzt' : fTime(d)}</div>
-                            <div class="fc-emoji">${e}</div>
-                            <div class="fc-val1">${Math.round(data.hourly.temperature_2m[i])}°</div>
-                            <div class="fc-precip">${pProb > 0 ? '💧 '+pProb+'%' : ''}</div>
-                        </div>`;
-                }
+                calcMoon(settings.lat);
+                
+                // Setze Ansicht zurück auf Standard
+                renderCurrentLive();
+                renderHourly(currentHourIdxGlob, 0);
 
-                // --- TAGE (Rechts Unten) ---
+                // Rendert die Tagesvorschau (Nur einmalig beim Laden nötig)
                 const dCont = document.getElementById('container-daily');
                 dCont.innerHTML = '';
-                const wDays = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+                const day = weatherData.daily;
                 for (let i = 0; i < settings.days; i++) {
                     if(!day.time[i]) break;
                     const d = new Date(day.time[i]);
                     const e = getEmojiAndText(day.weather_code[i], true).emoji;
-                    const pProb = day.precipitation_probability_max[i];
                     dCont.innerHTML += `
-                        <div class="forecast-item">
-                            <div class="fc-time-day">${i === 0 ? 'Heute' : wDays[d.getDay()]}</div>
+                        <div class="forecast-item" onclick="selectDaily(${i}, this)">
+                            <div class="fc-time-day">${i === 0 ? 'Heute' : weekdaysShort[d.getDay()]}</div>
                             <div class="fc-emoji">${e}</div>
                             <div class="fc-val1">${Math.round(day.temperature_2m_max[i])}°</div>
                             <div class="fc-val2">${Math.round(day.temperature_2m_min[i])}°</div>
-                            <div class="fc-precip">${pProb > 0 ? '💧 '+pProb+'%' : ''}</div>
                         </div>`;
                 }
-            } catch (error) { console.error("Fehler!", error); }
+            } catch (error) { console.error("API Fehler!", error); }
         }
 
+        // --- EINSTELLUNGEN MENÜ LOGIK ---
+        let btnTimeout;
+        document.body.addEventListener('click', (e) => {
+            if (e.target.closest('#settings-modal') || e.target.closest('.forecast-item')) return;
+            const btn = document.getElementById('settings-btn');
+            if (e.target.id === 'settings-btn') {
+                document.getElementById('input-name').value = settings.name;
+                document.getElementById('input-lat').value = settings.lat;
+                document.getElementById('input-lon').value = settings.lon;
+                document.getElementById('input-days').value = settings.days;
+                document.getElementById('settings-modal').style.display = 'flex';
+                return;
+            }
+            btn.classList.add('visible');
+            clearTimeout(btnTimeout);
+            btnTimeout = setTimeout(() => btn.classList.remove('visible'), 4000);
+        });
+
+        function saveSettings() {
+            settings.name = document.getElementById('input-name').value;
+            settings.lat = parseFloat(document.getElementById('input-lat').value);
+            settings.lon = parseFloat(document.getElementById('input-lon').value);
+            settings.days = parseInt(document.getElementById('input-days').value);
+            localStorage.setItem('wName', settings.name);
+            localStorage.setItem('wLat', settings.lat);
+            localStorage.setItem('wLon', settings.lon);
+            localStorage.setItem('wDays', settings.days);
+            document.getElementById('settings-modal').style.display = 'none';
+            fetchWeatherData();
+        }
+
+        async function searchCity() {
+            const q = document.getElementById('search-input').value;
+            if (!q) return;
+            try {
+                const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=10&language=de&format=json`);
+                const data = await res.json();
+                const sel = document.getElementById('search-results');
+                sel.innerHTML = '<option value="">-- Bitte wählen --</option>';
+                if (data.results) {
+                    window.foundCities = data.results;
+                    data.results.forEach((c, i) => sel.innerHTML += `<option value="${i}">${c.name} (${c.admin1 || ''}, ${c.country || ''})</option>`);
+                    sel.style.display = 'block';
+                }
+            } catch (err) {}
+        }
+
+        function applySearchResult() {
+            const idx = document.getElementById('search-results').value;
+            if (idx === "") return;
+            document.getElementById('input-name').value = window.foundCities[idx].name;
+            document.getElementById('input-lat').value = window.foundCities[idx].latitude.toFixed(4);
+            document.getElementById('input-lon').value = window.foundCities[idx].longitude.toFixed(4);
+        }
+
+        // Init
         fetchWeatherData();
         setInterval(fetchWeatherData, 5 * 60 * 1000);
     </script>
